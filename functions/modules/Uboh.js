@@ -96,8 +96,26 @@ exports.sendSMS = async function (res, sms, smsContent) {
  */
 exports.addAdvice = async function (res, db, adviceList) {
   try {
-    console.log(adviceList);
-    res.json({ code: 200, message: [] });
+    let unprocessedAdvice = [];
+    adviceList.map((advice) => {
+      let adviceValidation = validateAdvice(
+        advice.likes,
+        advice.advice,
+        advice.author,
+        advice.category
+      );
+      console.log(adviceValidation);
+      if (adviceValidation.length > 0) {
+        let adviceValidationResponse = Object.assign(
+          { ...advice },
+          { validationResult: adviceValidation }
+        );
+        unprocessedAdvice.push(adviceValidationResponse);
+      } else {
+        console.log(advice);
+      }
+    });
+    res.json({ code: 200, message: "added advice", unprocessedAdvice });
   } catch (error) {
     console.error(error);
     res.json({
@@ -115,6 +133,14 @@ exports.addAdvice = async function (res, db, adviceList) {
  * @param {string} category  type of advice
  */
 function validateAdvice(likes, advice, author, category) {
-  console.log("validating advice");
   let validationResult = [];
+  if (likes == null || likes == undefined || typeof likes !== "number")
+    validationResult.push("likes should be number");
+  if (!advice || typeof advice !== "string")
+    validationResult.push("advice should be string");
+  if (!author || typeof author !== "string")
+    validationResult.push("author should be string");
+  if (!category || typeof category !== "string")
+    validationResult.push("category should be string");
+  return validationResult;
 }
