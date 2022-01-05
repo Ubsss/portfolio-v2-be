@@ -154,6 +154,39 @@ exports.getAllAdvice = async function (res, db) {
 };
 
 /**
+ * gets all advice from db
+ * @param {express response}   res      express response object
+ * @param {firebase firestore} db       firestore object
+ * @param {string}             adviceID id of advice to update
+ * @param {number}             newLikes number of likes to add
+ */
+exports.likeAdvice = async function (res, db, adviceID, newLikes) {
+  try {
+    if (typeof newLikes !== "number")
+      throw { code: 400, message: "invalid request" };
+    await db
+      .collection("advice")
+      .doc(adviceID)
+      .get()
+      .then((response) => {
+        if (response.exists) {
+          let adviceInfo = response.data();
+          adviceInfo.likes += newLikes;
+          db.collection("advice").doc(adviceID).set(adviceInfo);
+        } else throw { code: 400, message: "advice does not exist" };
+      });
+
+    res.json({ code: 200, message: "advice updated" });
+  } catch (error) {
+    console.error(error);
+    res.json({
+      code: error.code ? error.code : 500,
+      message: error.message ? error.message : "Internal error",
+    });
+  }
+};
+
+/**
  * validate the advice object
  * @param {number} likes     total likes for advice
  * @param {string} advice    the advice itself
