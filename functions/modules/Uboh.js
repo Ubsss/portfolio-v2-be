@@ -104,7 +104,6 @@ exports.addAdvice = async function (res, db, adviceList) {
         advice.author,
         advice.category
       );
-      console.log(adviceValidation);
       if (adviceValidation.length > 0) {
         let adviceValidationResponse = Object.assign(
           { ...advice },
@@ -112,7 +111,7 @@ exports.addAdvice = async function (res, db, adviceList) {
         );
         unprocessedAdvice.push(adviceValidationResponse);
       } else {
-        console.log(advice);
+        db.collection("advice").add(advice);
       }
     });
     res.json({ code: 200, message: "added advice", unprocessedAdvice });
