@@ -90,11 +90,21 @@ exports.sendSMS = async function (res, sms, smsContent) {
 
 /**
  * add an advice to db
- * @param {express response} res        express response object
- * @param {array[advice]}    adviceList list of advice
+ * @param {express response}   res        express response object
+ * @param {firebase firestore} db         firestore object
+ * @param {array[advice]}      adviceList list of advice
  */
-exports.addAdvice = async function (res, adviceList) {
-  console.log("adding advice to db");
+exports.addAdvice = async function (res, db, adviceList) {
+  try {
+    console.log(adviceList);
+    res.json({ code: 200, message: [] });
+  } catch (error) {
+    console.error(error);
+    res.json({
+      code: error.code && error.code === 400 ? error.code : 500,
+      message: "Internal error",
+    });
+  }
 };
 
 /**
@@ -106,4 +116,5 @@ exports.addAdvice = async function (res, adviceList) {
  */
 function validateAdvice(likes, advice, author, category) {
   console.log("validating advice");
+  let validationResult = [];
 }

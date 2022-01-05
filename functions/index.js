@@ -4,6 +4,9 @@ const twilioClient = require("twilio");
 const cors = require("cors")({ origin: true });
 const uboh = require("./modules/Uboh");
 
+admin.initializeApp();
+const db = admin.firestore();
+const auth = admin.auth();
 const smsClient = twilioClient(
   functions.config().sms.account_sid,
   functions.config().sms.auth_token
@@ -13,19 +16,15 @@ exports.uboh = functions.https.onRequest((req, res) => {
   cors(req, res, () => {
     try {
       if (req.method !== "POST" || !req.body)
-        throw { code: 400, message: "Invalid sms request" };
-
+        return res.json({ code: 400, message: "Invalid request" });
       if (
-        !req.headers.authentication ||
-        !req.headers.authentication.startsWith("Bearer ")
+        !req.headers.authorization ||
+        !req.headers.authorization.startsWith("Bearer ")
       ) {
-        throw { code: 400, message: "Unauthorized access" };
+        return res.json({ code: 400, message: "Unauthorized access" });
       }
-
-      let token = req.headers.authentication.split("Bearer ")[1];
-
+      let token = req.headers.authorization.split("Bearer ")[1];
       let action = req.body.action;
-
       auth
         .verifyIdToken(token)
         .then(() => {
@@ -34,16 +33,16 @@ exports.uboh = functions.https.onRequest((req, res) => {
               uboh.addMessage(req.body.message, res, db);
               break;
             case "addLog":
-              uboh.addLog(req.body.log, res, db);
+              uboh.addLog(req.body.messages, res, db);
               break;
             case "sendSMS":
-              uboh.sendSMS(res, smsClient, req.body.smsContent);
+              uboh.sendSMS(res, smsClient, req.body.message);
               break;
             case "addAdvice":
-              uboh.addAdvice(res, req.body.advice);
+              uboh.addAdvice(res, db, req.body.message);
               break;
             default:
-              res.json({ code: 400, message: "Invalid sms request" });
+              res.json({ code: 400, message: "Invalid request" });
               break;
           }
           return;
@@ -58,9 +57,8 @@ exports.uboh = functions.https.onRequest((req, res) => {
     } catch (error) {
       console.error(error);
       res.json({
-        code: error.code && error.code === 400 ? error.code : 500,
-        message:
-          error.code && error.code === 400 ? error.message : "Internal error",
+        code: 500,
+        message: "Internal error, please try again later",
       });
     }
   });
