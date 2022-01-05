@@ -125,6 +125,35 @@ exports.addAdvice = async function (res, db, adviceList) {
 };
 
 /**
+ * gets all advice from db
+ * @param {express response}   res express response object
+ * @param {firebase firestore} db  firestore object
+ */
+exports.getAllAdvice = async function (res, db) {
+  try {
+    let adviceList = [];
+    await db
+      .collection("advice")
+      .get()
+      .then((response) => {
+        if (!response.empty) {
+          response.forEach((doc) => {
+            adviceList.push({ id: doc.id, ...doc.data() });
+          });
+        }
+      });
+
+    res.json({ code: 200, message: adviceList });
+  } catch (error) {
+    console.error(error);
+    res.json({
+      code: 500,
+      message: "Internal error",
+    });
+  }
+};
+
+/**
  * validate the advice object
  * @param {number} likes     total likes for advice
  * @param {string} advice    the advice itself

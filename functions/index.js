@@ -41,6 +41,9 @@ exports.uboh = functions.https.onRequest((req, res) => {
             case "addAdvice":
               uboh.addAdvice(res, db, req.body.message);
               break;
+            case "getAllAdvice":
+              uboh.getAllAdvice(res, db);
+              break;
             default:
               res.json({ code: 400, message: "Invalid request" });
               break;
