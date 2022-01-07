@@ -36,7 +36,13 @@ exports.uboh = functions.https.onRequest((req, res) => {
               uboh.addLog(req.body.messages, res, db);
               break;
             case "sendSMS":
-              uboh.sendSMS(res, smsClient, req.body.message);
+              uboh.sendSMS(
+                res,
+                smsClient,
+                req.body.message,
+                functions.config().sms.personal_number,
+                functions.config().sms.twilio_number
+              );
               break;
             case "addAdvice":
               uboh.addAdvice(res, db, req.body.message);

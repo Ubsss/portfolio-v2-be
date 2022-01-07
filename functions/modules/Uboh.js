@@ -68,22 +68,28 @@ exports.addLog = async function (log, res, db) {
  * Sends an sms to a provided number with message
  * @param {Express response}  res        express response object
  * @param {Twilio SMS Object} sms        twilio sms object
- * @param {string}            message    message to be sent
+ * @param {string}            smsContent message to be sent
+ * @param {string}            to         number getting message
+ * @param {string}            from       twilio number sending message
  */
-exports.sendSMS = async function (res, sms, smsContent) {
+exports.sendSMS = async function (res, sms, smsContent, to, from) {
   try {
-    if (!res || !sms || !message) throw new Error("Invalid sms request");
+    if (!res || !sms || !smsContent)
+      throw { code: 400, message: "Invalid sms request" };
     let sendMessage = await sms.messages.create({
-      to: functions.config().sms.personal_number,
-      from: functions.config().sms.twilio_number,
-      body: message,
+      to,
+      from,
+      body: JSON.stringify(smsContent),
     });
-    console.log(sendMessage);
     res.json({ status: "Success", message: "Sent sms message" });
   } catch (error) {
+    console.error(error);
     res.json({
-      status: "Error",
-      message: error.message || "Unable to send sms",
+      code: error.code && error.code === 400 ? error.code : 500,
+      message:
+        error.code && error.code === 400
+          ? error.message
+          : "Internal error, pl-ease try again later",
     });
   }
 };
