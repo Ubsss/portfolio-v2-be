@@ -9,13 +9,30 @@ exports.addMessage = async function (message, res, db) {
     if (!message.email || !message.type || !message.message)
       throw { code: 400, message: "Invalid message object" };
 
-    let date = new Date();
-    let newMessage = Object.assign({ created: date.toUTCString() }, message);
+    let currentDay = new Date("August 19, 1975 23:15:30").toString();
+    let currentDayDoc = currentDay.substring(0, 15).replace(/\s+/g, "_");
+    let newMessage = Object.assign({ created: currentDay }, message);
 
-    await db
+    let currentDayMessages = await db
       .collection("messages")
-      .doc(`${message.email}_${date.toUTCString().replace(/\s+/g, "")}`)
-      .set(newMessage);
+      .doc(currentDayDoc)
+      .get();
+
+    if (currentDayMessages.exists) {
+      let currentDayMessagesData = currentDayMessages.data();
+      if (currentDayMessagesData.hasOwnProperty(newMessage.type))
+        currentDayMessagesData[newMessage.type].push(newMessage);
+      else currentDayMessagesData[newMessage.type] = [newMessage];
+      await db
+        .collection("messages")
+        .doc(currentDayDoc)
+        .set(currentDayMessagesData);
+    } else {
+      await db
+        .collection("messages")
+        .doc(currentDayDoc)
+        .set({ [newMessage.type]: [newMessage] });
+    }
 
     res.json({
       code: 200,
